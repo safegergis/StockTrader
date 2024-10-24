@@ -21,8 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input/'
-import { Label } from '@/components/ui/label/'
 import { RangeCalendar } from '@/components/ui/range-calendar'
 import { cn } from '@/lib/utils'
 import ThemeSwitch from '@/components/ThemeSwitch.vue'
@@ -46,6 +44,12 @@ const dateRange = ref({
 const symbol = ref('')
 const renderChart = ref(false)
 const stockHistory = ref('')
+const initialBalance = ref(0)
+const finalBalance = ref(0)
+const totalGainLoss = ref(0)
+const totalTrades = ref(0)
+const totalReturn = ref(0)
+
 const fetchSymbolHistory = async () => {
   console.log(symbol.value, dateRange.value.start, dateRange.value.end)
   if (symbol.value && dateRange.value.start && dateRange.value.end) {
@@ -56,6 +60,23 @@ const fetchSymbolHistory = async () => {
       stockHistory.value = res
       download(res, 'stock_history.json', 'text/plain')
       renderChart.value = true
+    })
+  }
+}
+const runBacktest = async () => {
+  if (stockHistory.value) {
+    await ofetch(`http://localhost:5000/run_backtest`, {
+      method: 'POST',
+      body: stockHistory.value,
+    }).then(res => {
+      console.log(res[1])
+      download(res[0], 'backtest_results.json', 'text/plain')
+      const metrics = JSON.parse(res[1])
+      initialBalance.value = metrics.initial_balance
+      finalBalance.value = metrics.final_balance
+      totalGainLoss.value = metrics.total_gain_loss
+      totalTrades.value = metrics.total_trades
+      totalReturn.value = metrics.total_return
     })
   }
 }
@@ -181,6 +202,7 @@ const fetchSymbolHistory = async () => {
               <Button
                 variant="default"
                 class="dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 mt-4"
+                @click="runBacktest()"
               >
                 <PlayIcon class="mr-2 h-4 w-4" />
                 Run Backtest
@@ -190,67 +212,53 @@ const fetchSymbolHistory = async () => {
               <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-2">
                   <p class="text-sm text-muted-foreground dark:text-gray-400">
-                    Total Gain/Loss
+                    Initial Balance
                   </p>
-                  <p class="text-2xl font-bold text-green-500">$12,450.00</p>
+                  <p class="text-2xl font-bold dark:text-gray-200">
+                    ${{ initialBalance?.toLocaleString() ?? '---' }}
+                  </p>
                 </div>
                 <div class="space-y-2">
                   <p class="text-sm text-muted-foreground dark:text-gray-400">
-                    Annual Return
+                    Total Gain/Loss
                   </p>
-                  <p class="text-2xl font-bold dark:text-gray-200">24.5%</p>
+                  <p
+                    class="text-2xl font-bold"
+                    :class="
+                      totalGainLoss > 0 ? 'text-green-500' : 'text-red-500'
+                    "
+                  >
+                    ${{ totalGainLoss?.toLocaleString() ?? '---' }}
+                  </p>
+                </div>
+                <div class="space-y-2">
+                  <p class="text-sm text-muted-foreground dark:text-gray-400">
+                    Total Trades
+                  </p>
+                  <p class="text-2xl font-bold dark:text-gray-200">
+                    {{ totalTrades ?? '---' }}
+                  </p>
                 </div>
                 <div class="space-y-2">
                   <p class="text-sm text-muted-foreground dark:text-gray-400">
                     Total Return
                   </p>
-                  <p class="text-2xl font-bold dark:text-gray-200">45.8%</p>
+                  <p
+                    class="text-2xl font-bold"
+                    :class="totalReturn > 0 ? 'text-green-500' : 'text-red-500'"
+                  >
+                    {{ totalReturn ? `${totalReturn.toFixed(2)}%` : '---' }}
+                  </p>
                 </div>
                 <div class="space-y-2">
                   <p class="text-sm text-muted-foreground dark:text-gray-400">
-                    Current Balance
+                    Final Balance
                   </p>
                   <p class="text-2xl font-bold dark:text-gray-200">
-                    $45,670.00
+                    ${{ finalBalance?.toLocaleString() ?? '---' }}
                   </p>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card class="dark:bg-gray-800 dark:border-gray-700">
-          <CardHeader>
-            <CardTitle class="dark:text-gray-200"
-              >Strategy Parameters</CardTitle
-            >
-          </CardHeader>
-          <CardContent>
-            <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <Label class="dark:text-gray-200"
-                    >Moving Average Period</Label
-                  >
-                  <Input
-                    type="number"
-                    placeholder="20"
-                    class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label class="dark:text-gray-200">Standard Deviation</Label>
-                  <Input
-                    type="number"
-                    placeholder="2"
-                    class="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
-                  />
-                </div>
-              </div>
-              <Button
-                class="w-full dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200"
-                >Update Parameters</Button
-              >
             </div>
           </CardContent>
         </Card>
