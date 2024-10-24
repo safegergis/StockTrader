@@ -27,3 +27,6 @@ def run_backtest():
     json_data = request.json
     trades, metrics = calculate_sma(json_data)
     return jsonify(trades, metrics)
+
+if __name__ == "__main__":
+    app.run(debug=True)

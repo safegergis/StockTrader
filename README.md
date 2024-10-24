@@ -1,39 +1,85 @@
 # StockTrader
 
-This template should help get you started developing with Vue 3 in Vite.
+A Vue.js application for backtesting stock trading strategies.
 
-## Recommended IDE Setup
+## Prerequisites
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Node.js 20 or higher
+- pnpm package manager
+- Python 3.10 or higher (for the backend API)
 
-## Type Support for `.vue` Imports in TS
+## Frontend Setup
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+1. **Install pnpm** (if not already installed):
 
-## Customize configuration
+   ```sh
+   npm install -g pnpm
+   ```
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+2. **Install the necessary dependencies for the frontend**:
 
-## Project Setup
+   ```sh
+   pnpm install
+   ```
 
-```sh
-pnpm install
-```
+3. **Run the development server**:
+   ```sh
+   pnpm dev
+   ```
 
-### Compile and Hot-Reload for Development
+## Backend Setup
 
-```sh
-pnpm dev
-```
+1. **Navigate to the backend directory**:
 
-### Type-Check, Compile and Minify for Production
+   ```sh
+   cd backend
+   ```
 
-```sh
-pnpm build
-```
+2. **Create a virtual environment**:
 
-### Lint with [ESLint](https://eslint.org/)
+   ```sh
+   python -m venv venv
+   ```
 
-```sh
-pnpm lint
-```
+3. **Activate the virtual environment**:
+
+   - On Windows:
+     ```sh
+     venv\Scripts\activate
+     ```
+   - On macOS/Linux:
+     ```sh
+     source venv/bin/activate
+     ```
+
+4. **Install the required Python packages**:
+
+   ```sh
+   pip install -r requirements.txt
+   ```
+
+5. **Run the backend server**:
+   ```sh
+   python backend/server.py
+   ```
+
+## Running the Application
+
+1. **Start the frontend development server**:
+
+   ```sh
+   pnpm dev
+   ```
+
+2. **Ensure the backend server is running**:
+
+   ```sh
+   python backend/server.py
+   ```
+
+3. **Open your browser and navigate to**:
+   ```
+   http://localhost:3000
+   ```
+
+Now you should be able to use the StockTrader application for backtesting stock trading strategies.
