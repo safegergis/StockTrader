@@ -25,13 +25,17 @@ import { Input } from '@/components/ui/input/'
 import { Label } from '@/components/ui/label/'
 import { RangeCalendar } from '@/components/ui/range-calendar'
 import { cn } from '@/lib/utils'
-import ThemeSwitch from '@/components/themeSwitch.vue'
+import ThemeSwitch from '@/components/ThemeSwitch.vue'
 import {
   CalendarDate,
   DateFormatter,
   getLocalTimeZone,
 } from '@internationalized/date'
 import { ref, type Ref } from 'vue'
+import { ofetch } from 'ofetch'
+import StockChart from '@/components/StockChart.vue'
+import download from 'downloadjs'
+
 const df = new DateFormatter('en-US', {
   dateStyle: 'medium',
 })
@@ -39,6 +43,22 @@ const dateRange = ref({
   start: new CalendarDate(2020, 1, 1),
   end: new CalendarDate(2024, 10, 24),
 }) as Ref<DateRange>
+const symbol = ref('')
+const renderChart = ref(false)
+const stockHistory = ref('')
+const fetchSymbolHistory = async () => {
+  console.log(symbol.value, dateRange.value.start, dateRange.value.end)
+  if (symbol.value && dateRange.value.start && dateRange.value.end) {
+    await ofetch(
+      `http://localhost:5000/fetch_history?symbol=${symbol.value}&start_date=${dateRange.value.start}&end_date=${dateRange.value.end}`,
+    ).then(res => {
+      localStorage.setItem('symbolHistory', res)
+      stockHistory.value = res
+      download(res, 'stock_history.json', 'text/plain')
+      renderChart.value = true
+    })
+  }
+}
 </script>
 
 <template>
@@ -47,7 +67,7 @@ const dateRange = ref({
   >
     <div class="flex flex-col gap-4 p-4">
       <div class="flex items-center gap-4">
-        <Select>
+        <Select v-model="symbol">
           <SelectTrigger
             class="w-[180px] dark:bg-gray-800 dark:border-gray-700"
           >
@@ -115,6 +135,7 @@ const dateRange = ref({
         <Button
           variant="outline"
           class="dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
+          @click="fetchSymbolHistory()"
         >
           <DownloadIcon class="mr-2 h-4 w-4" />
           Download Results
@@ -123,9 +144,9 @@ const dateRange = ref({
       </div>
 
       <div
-        class="w-full h-[400px] border rounded-lg bg-card p-4 flex items-center justify-center text-muted-foreground dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+        class="w-full h-[500px] border rounded-lg bg-card p-4 flex items-center justify-center text-muted-foreground dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
       >
-        Chart will be rendered here
+        <StockChart v-if="renderChart" :stock-history="stockHistory" />
       </div>
 
       <div class="grid grid-cols-2 gap-4">
