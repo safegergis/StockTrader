@@ -49,7 +49,7 @@ const finalBalance = ref(0)
 const totalGainLoss = ref(0)
 const totalTrades = ref(0)
 const totalReturn = ref(0)
-
+const strategy = ref('')
 const fetchSymbolHistory = async () => {
   console.log(symbol.value, dateRange.value.start, dateRange.value.end)
   if (symbol.value && dateRange.value.start && dateRange.value.end) {
@@ -65,7 +65,7 @@ const fetchSymbolHistory = async () => {
 }
 const runBacktest = async () => {
   if (stockHistory.value) {
-    await ofetch(`http://localhost:5000/run_backtest`, {
+    await ofetch(`http://localhost:5000/${strategy.value}_backtest`, {
       method: 'POST',
       body: stockHistory.value,
     }).then(res => {
@@ -179,7 +179,7 @@ const runBacktest = async () => {
           </CardHeader>
           <CardContent class="grid grid-cols-2 gap-4">
             <div>
-              <Select>
+              <Select v-model="strategy">
                 <SelectTrigger
                   class="w-[180px] dark:bg-gray-800 dark:border-gray-700"
                 >
@@ -193,8 +193,14 @@ const runBacktest = async () => {
                     <SelectLabel class="dark:text-gray-400"
                       >Trading Strategies</SelectLabel
                     >
-                    <SelectItem value="placeholder" class="dark:text-gray-200"
-                      >placeholder</SelectItem
+                    <SelectItem value="sma" class="dark:text-gray-200"
+                      >SMA</SelectItem
+                    >
+                    <SelectItem value="bb" class="dark:text-gray-200"
+                      >BB</SelectItem
+                    >
+                    <SelectItem value="macd" class="dark:text-gray-200"
+                      >MACD</SelectItem
                     >
                   </SelectGroup>
                 </SelectContent>

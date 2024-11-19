@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from yfinance import Ticker
 from flask_cors import CORS
-from trading_strategy import calculate_sma
+from trading_strategy import backtest_sma, backtest_bb, backtest_macd
 app = Flask(__name__)
 CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -22,10 +22,21 @@ def fetch_history():
 
     return history_json
 
-@app.route("/run_backtest", methods=["POST"])
-def run_backtest():
+@app.route("/sma_backtest", methods=["POST"])
+def sma_backtest():
     json_data = request.json
-    trades, metrics = calculate_sma(json_data)
+    trades, metrics = backtest_sma(json_data)
+    return jsonify(trades, metrics)
+
+@app.route("/bb_backtest", methods=["POST"])
+def bb_backtest():
+    json_data = request.json
+    trades, metrics = backtest_bb(json_data)
+    return jsonify(trades, metrics)
+@app.route("/macd_backtest", methods=["POST"])
+def macd_backtest():
+    json_data = request.json
+    trades, metrics = backtest_macd(json_data)
     return jsonify(trades, metrics)
 
 if __name__ == "__main__":
