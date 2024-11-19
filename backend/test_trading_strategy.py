@@ -64,8 +64,7 @@ class TestTradingStrategy(unittest.TestCase):
 class TestTradingStrategyIntegration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # Load real historical data for integration tests
-        # You would typically load this from a file or database
+
         cls.historical_data = []
         base_date = datetime(2023, 1, 1)
         
