@@ -91,7 +91,7 @@ def backtest_sma(json_data):
   }
 
   return json.dumps(trades), json.dumps(metrics)
-def backtest_bb(json_data, initial_balance=10000, period=20, num_std=2):
+def backtest_bb(json_data, initial_balance=10000, period=20, num_std=1):
   """
   Backtest trading strategy using Bollinger Bands
   Buy when price crosses below lower band
@@ -119,6 +119,9 @@ def backtest_bb(json_data, initial_balance=10000, period=20, num_std=2):
   for i in range(period, len(closing_prices)):
     current_price = closing_prices[i]
     date = dates[i]
+    # Convert timestamp to locale date string
+    if isinstance(date, (int, float)):
+        date = pd.to_datetime(date, unit='ms').strftime('%Y-%m-%d')
     
     # Buy signal - price crosses below lower band
     if current_price < lower_band[i] and current_price > lower_band[i-1] and position == 0:
@@ -204,6 +207,9 @@ def backtest_macd(json_data, initial_balance=10000, fast_period=12, slow_period=
   for i in range(slow_period, len(closing_prices)):
     current_price = closing_prices[i]
     date = dates[i]
+    # Convert timestamp to locale date string
+    if isinstance(date, (int, float)):
+        date = pd.to_datetime(date, unit='ms').strftime('%Y-%m-%d')
     
     # Buy signal - MACD crosses above signal line
     if macd[i] > signal[i] and macd[i-1] <= signal[i-1] and position == 0:
