@@ -5,6 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
 import { useColorMode } from '@vueuse/core'
 import { Moon, Sun } from 'lucide-vue-next'
 const mode = useColorMode()

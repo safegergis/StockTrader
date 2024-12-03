@@ -32,6 +32,9 @@ def backtest_sma(json_data):
   for i in range(1, len(short_sma)):
     date = dates[i+49]  # Offset by 49 due to SMA calculation
     current_price = closing_prices[i+49]
+    # Convert timestamp to locale date string
+    if isinstance(date, (int, float)):
+        date = pd.to_datetime(date, unit='ms').strftime('%Y-%m-%d')
     
     # Buy signal - short SMA crosses above long SMA
     if short_sma[i] > long_sma[i] and short_sma[i-1] <= long_sma[i-1] and position == 0:

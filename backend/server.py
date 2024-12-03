@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask,request, jsonify
 from yfinance import Ticker
 from flask_cors import CORS
 from trading_strategy import backtest_sma, backtest_bb, backtest_macd
