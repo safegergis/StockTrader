@@ -90,7 +90,7 @@ def backtest_sma(json_data):
     "total_trades": total_trades,
   }
 
-  return json.dumps(trades), json.dumps(metrics)
+  return json.dumps(trades, indent = 4), json.dumps(metrics, indent = 4)
 def backtest_bb(json_data, initial_balance=10000, period=20, num_std=1):
   """
   Backtest trading strategy using Bollinger Bands
@@ -177,7 +177,7 @@ def backtest_bb(json_data, initial_balance=10000, period=20, num_std=1):
     "total_trades": total_trades,
   }
 
-  return json.dumps(trades), json.dumps(metrics)
+  return json.dumps(trades, indent = 4), json.dumps(metrics, indent = 4)
 
 def backtest_macd(json_data, initial_balance=10000, fast_period=12, slow_period=26, signal_period=9):
   """
@@ -265,4 +265,4 @@ def backtest_macd(json_data, initial_balance=10000, fast_period=12, slow_period=
     "total_trades": total_trades,
   }
 
-  return json.dumps(trades), json.dumps(metrics)
+  return json.dumps(trades, indent = 4), json.dumps(metrics, indent = 4)
