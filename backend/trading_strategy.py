@@ -92,92 +92,120 @@ def backtest_sma(json_data):
 
   return json.dumps(trades, indent = 4), json.dumps(metrics, indent = 4)
 def backtest_bb(json_data, initial_balance=10000, period=20, num_std=1):
-  """
-  Backtest trading strategy using Bollinger Bands
-  Buy when price crosses below lower band
-  Sell when price crosses above upper band
-  """
-  # Extract dates and closing prices
-  dates = [day['Date'] for day in json_data]
-  closing_prices = [day['Close'] for day in json_data]
-  
-  trades = []
-  
-  # Calculate Bollinger Bands
-  sma = pd.Series(closing_prices).rolling(window=period).mean()
-  std = pd.Series(closing_prices).rolling(window=period).std()
-  upper_band = sma + (std * num_std)
-  lower_band = sma - (std * num_std)
-
-  balance = initial_balance
-  position = 0  # 0 = no position, 1 = long
-  shares = 0
-  entry_price = 0
-  total_trades = 0
-  winning_trades = 0
-
-  for i in range(period, len(closing_prices)):
-    current_price = closing_prices[i]
-    date = dates[i]
-    # Convert timestamp to locale date string
-    if isinstance(date, (int, float)):
-        date = pd.to_datetime(date, unit='ms').strftime('%Y-%m-%d')
+    """
+    Backtest trading strategy using Bollinger Bands
+    Buy when price crosses below lower band
+    Sell when price crosses above upper band
+    """
+    # Extract dates and closing prices
+    dates = [day['Date'] for day in json_data]
+    closing_prices = [day['Close'] for day in json_data]
     
-    # Buy signal - price crosses below lower band
-    if current_price < lower_band[i] and current_price > lower_band[i-1] and position == 0:
-      shares = balance // current_price
-      cost = shares * current_price
-      balance -= cost
-      position = 1
-      entry_price = current_price
-      
-      trades.append({
-        "date": date,
-        "type": "BUY",
-        "shares": shares,
-        "price": current_price,
-        "amount": cost,
-        "balance": balance,
-        "return": ((balance + (shares * current_price)) - initial_balance) / initial_balance * 100
-      })
-      total_trades += 1
-      
-    # Sell signal - price crosses above upper band
-    elif current_price > upper_band[i] and current_price < upper_band[i-1] and position == 1:
-      proceeds = shares * current_price
-      balance += proceeds
-      position = 0
-      
-      trade_return = (current_price - entry_price) / entry_price * 100
-      if trade_return > 0:
-        winning_trades += 1
+    trades = []
+    
+    # Calculate Bollinger Bands
+    price_series = pd.Series(closing_prices)
+    sma = price_series.rolling(window=period).mean()
+    std = price_series.rolling(window=period).std()
+    upper_band = sma + (std * num_std)
+    lower_band = sma - (std * num_std)
+
+    balance = initial_balance
+    position = 0  # 0 = no position, 1 = long
+    shares = 0
+    entry_price = 0
+    total_trades = 0
+    winning_trades = 0
+
+    for i in range(period, len(closing_prices)):
+        current_price = closing_prices[i]
+        prev_price = closing_prices[i-1]
+        current_date = dates[i]
+        prev_date = dates[i-1]
+        # Convert timestamp to locale date string
+        if isinstance(current_date, (int, float)):
+            current_date = pd.to_datetime(current_date, unit='ms').strftime('%Y-%m-%d')
+        if isinstance(prev_date, (int, float)):
+            prev_date = pd.to_datetime(prev_date, unit='ms').strftime('%Y-%m-%d')
         
-      trades.append({
-        "date": date,
-        "type": "SELL",
-        "shares": shares, 
-        "price": current_price,
-        "amount": proceeds,
-        "balance": balance,
-        "return": (balance - initial_balance) / initial_balance * 100
-      })
-      shares = 0
-      total_trades += 1
+        # Buy signal - price crosses below lower band
+        if (prev_price > lower_band[i-1]) and (current_price < lower_band[i]) and (position == 0):
+            shares = balance // current_price
+            if shares > 0:
+                cost = shares * current_price
+                balance -= cost
+                position = 1
+                entry_price = current_price
+                
+                trades.append({
+                    "date": current_date,
+                    "type": "BUY",
+                    "shares": shares,
+                    "price": current_price,
+                    "amount": cost,
+                    "balance": balance,
+                    "return": ((current_price - entry_price) / entry_price * 100) if entry_price else 0
+                })
+                total_trades += 1
+                
+        # Sell signal - price crosses above upper band
+        elif (prev_price < upper_band[i-1]) and (current_price > upper_band[i]) and (position == 1):
+            proceeds = shares * current_price
+            balance += proceeds
+            position = 0
+            
+            trade_return = (current_price - entry_price) / entry_price * 100
+            if trade_return > 0:
+                winning_trades += 1
+                
+            trades.append({
+                "date": current_date,
+                "type": "SELL",
+                "shares": shares, 
+                "price": current_price,
+                "amount": proceeds,
+                "balance": balance,
+                "return": trade_return
+            })
+            shares = 0
+            total_trades += 1
 
-  # Calculate final metrics
-  final_value = balance + (shares * closing_prices[-1])
-  total_return = (final_value - initial_balance) / initial_balance * 100
-  total_gain_loss = final_value - initial_balance
-  
-  metrics = {
-    "initial_balance": initial_balance,
-    "final_balance": final_value,
-    "total_gain_loss": total_gain_loss,
-    "total_return": total_return,
-    "total_trades": total_trades,
-  }
+    # Close any open position at the end
+    if position == 1:
+        final_price = closing_prices[-1]
+        proceeds = shares * final_price
+        balance += proceeds
+        trade_return = (final_price - entry_price) / entry_price * 100
+        if trade_return > 0:
+            winning_trades += 1
+            
+        trades.append({
+            "date": dates[-1] if not isinstance(dates[-1], str) else dates[-1],
+            "type": "SELL",
+            "shares": shares,
+            "price": final_price,
+            "amount": proceeds,
+            "balance": balance,
+            "return": trade_return
+        })
+        shares = 0
+        total_trades += 1
 
-  return json.dumps(trades, indent = 4), json.dumps(metrics, indent = 4)
+    # Calculate final metrics
+    final_value = balance + (shares * closing_prices[-1]) if position == 1 else balance
+    total_return = (final_value - initial_balance) / initial_balance * 100
+    total_gain_loss = final_value - initial_balance
+    
+    metrics = {
+        "initial_balance": initial_balance,
+        "final_balance": final_value,
+        "total_gain_loss": total_gain_loss,
+        "total_return": total_return,
+        "total_trades": total_trades,
+        "winning_trades": winning_trades
+    }
+
+    return json.dumps(trades, indent=4), json.dumps(metrics, indent=4)
 
 def backtest_macd(json_data, initial_balance=10000, fast_period=12, slow_period=26, signal_period=9):
   """
